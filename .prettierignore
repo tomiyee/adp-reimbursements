@@ -1,0 +1,4 @@
+# server production code
+/dist
+# client production code
+/client/build

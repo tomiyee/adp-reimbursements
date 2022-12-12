@@ -1,0 +1,48 @@
+{
+  "name": "adp-reimbursements",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+		"dev": "concurrently npm:client npm:server",
+		"server": "nodemon server/index.ts --ignore client",
+    "client": "cd client && npm start",
+    "style": "prettier --write .",
+    "lint": "npx eslint . --ext .ts --ext .tsx --max-warnings 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomiyee/adp-reimbursements.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tomiyee/adp-reimbursements/issues"
+  },
+  "homepage": "https://github.com/tomiyee/adp-reimbursements#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "typescript": "^4.9.4"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.14",
+    "@types/jest": "^29.2.4",
+    "@types/node": "^18.11.13",
+    "@types/react": "^18.0.26",
+    "@types/react-dom": "^18.0.9",
+    "@typescript-eslint/eslint-plugin": "^5.46.0",
+    "@typescript-eslint/parser": "^5.46.0",
+    "concurrently": "^7.6.0",
+    "eslint": "^8.29.0",
+    "eslint-plugin-react": "^7.31.11",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "nodemon": "^2.0.20",
+    "prettier": "2.8.1",
+    "ts-node": "^10.9.1"
+  },
+  "proxy": "http://localhost:5000/"
+}
