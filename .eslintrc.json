@@ -1,37 +1,33 @@
 {
-    "env": {
-        "browser": true,
-        "es2021": true,
-        "node": true
-    },
-    "extends": [
-        "eslint:recommended",
-        "plugin:react/recommended",
-        "plugin:@typescript-eslint/recommended"
-    ],
-    "overrides": [
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-        "ecmaVersion": "latest",
-        "sourceType": "module"
-    },
-    "plugins": [
-        "react",
-        "react-hooks",
-        "@typescript-eslint"
-    ],
-    "rules": {// Highly Recommended
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "overrides": [],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": ["react", "react-hooks", "@typescript-eslint"],
+  "rules": {
+    // Highly Recommended
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-shadow": ["error", { "allow": ["_"] }],
     "camelcase": [
-        "error",
-        {
+      "error",
+      {
         "ignoreImports": true
-        }
+      }
     ],
     "consistent-return": "error",
-    "dot-notation": "error",    
+    "dot-notation": "error",
     "eqeqeq": "error",
     "max-classes-per-file": "error",
     "max-lines": "off",
@@ -51,7 +47,7 @@
     "radix": "error",
     "react-hooks/exhaustive-deps": "warn",
     "react/prop-types": "off", // Typescript handles this
-    "yoda": "error", 
+    "yoda": "error",
 
     // Personally Recommended
     "new-cap": "off",
@@ -93,5 +89,5 @@
     "react/react-in-jsx-scope": "off",
     "space-before-function-paren": "off",
     "spaced-comment": "off"
-    }
+  }
 }

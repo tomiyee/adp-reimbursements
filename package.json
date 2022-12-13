@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-		"dev": "concurrently npm:client npm:server",
-		"server": "nodemon server/index.ts --ignore client",
+    "dev": "concurrently npm:client npm:server",
+    "server": "nodemon server/index.ts --ignore client",
     "client": "cd client && npm start",
     "style": "prettier --write .",
     "lint": "npx eslint . --ext .ts --ext .tsx --max-warnings 0"
