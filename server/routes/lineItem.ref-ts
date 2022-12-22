@@ -1,0 +1,290 @@
+// const express = require('express');
+// const router = express.Router();
+// const validateThat = require('./middleware');
+// const mongoose = require('mongoose');
+// /** @typedef {mongoose.Types.ObjectId} ObjectId */
+// // MongoDB Schemas
+// const Post = require('../models/Post');
+// const User = require('../models/User');
+// const Officer = require('../models/Officer');
+// const Report = require('../models/Report');
+
+// /**
+//  * @type {number}
+//  * This is the distance between the ends of the Harvard bridge, in units of latitude and longitude
+//  */
+// const MAX_DISTANCE = 0.0062;
+
+// /**
+//  * List all posts
+//  * 
+//  * @name GET /api/posts
+//  * 
+//  * @return {Post.PostData[]} - list of all stored posts
+//  */
+// router.get('/', async (req, res) => {
+//   /** @type {Post.PostData[]} The list of all posts */
+//   const posts = await Post.find({});
+//   res.status(200).json(posts).end();
+// });
+
+// /**
+//  * Creates a post
+//  * 
+//  * @name POST /api/posts
+//  * 
+//  * @param {string} title - One of the types of offenses
+//  * @param {string} content - The content of the post
+//  * @param {string[]} media - List of urls that link to media
+//  * @param {Post.LocationData} location - The latitude and longitude of the event
+//  * @param {Officer.UserSubmission[]} endorsements - The list of IDs
+//  * @param {number} incidentTime - The numeric time of the incident
+//  * @return {Post.PostData} - the created posts
+//  * @throws {401} - if a user is not logged in
+//  */
+// router.post('/', [
+//   validateThat.userIsLoggedIn,
+//   validateThat.officerSubmissionsWellFormed
+// ], async (req, res) => {
+//   // Decompose the body of the POST request
+
+//   /** @type {string} One of the select types of offenses */
+//   const title = req.body.title;
+//   /** @type {string} */
+//   const content = req.body.content;
+//   /** @type {string[]} */
+//   const media = req.body.media;
+//   /** @type {Post.LocationData} The latitude and longitude of the incident */
+//   const location = req.body.location;
+//   /** @type {number} The time of the incident */
+//   const incidentTime = req.body.incidentTime;
+//   /** @type {Officer.UserSubmission[]} A list of information for each officer */
+//   const officerSubmissions = req.body.endorsements;
+
+//   /** @type {User.UserData} */
+//   const user = await User.findOne({ username: req.session.username});
+//   /** @type {mongoose.Types.ObjectId} */
+//   const userID = user._id;
+  
+//   /** @type {Promise<ObjectId>[]} A list of promises that will resolve to an officer's ObjectId, or null */
+//   const officerPromises  = officerSubmissions.map(data => (new Promise(async (resolve, reject) => {
+//     // If the data just has the officerID directly, then return the string casted to ObjectId
+//     if (data.officerID && (await Officer.exists({ _id: data.officerID }))) 
+//       return resolve(mongoose.Types.ObjectId(data.officerID));
+
+//     // If a badge is given and an officer with that badge exists, then we return its ID
+//     if (data.badge && (await Officer.exists({ badge: parseInt(data.badge) })) ) {
+//       return resolve((await Officer.findOne({ badge: parseInt(data.badge) }))._id);
+//     }
+//     // If a name is given and an officer with the name exists, then we return its ID
+//     if (data.name && (await Officer.exists({ name: data.name })) )
+//       return resolve((await Officer.findOne({ name: data.name }))._id);
+    
+//     return resolve(null);
+//   })));
+
+//   const officerIds = (await Promise.all(officerPromises))
+//     .filter(officerID => officerID != null)
+//     .map(objectId => objectId.toString());
+  
+//   /** @type {Map<string, ObjectId[]} Maps officers to list of endorsers*/
+//   const endorsements = new Map();
+//   // Create the endorsements map and populate it with the user as the first endorser
+//   officerIds.forEach(officerId => endorsements.set(officerId, [userID]));
+
+//   // Check for Reports that are nearby and on the same day
+//   const HOUR24 = 24 * 60 * 60 * 1000;
+//   /** @type {Report.ReportData[]} A list of all reports that are within 12 hours of the created post */
+//   const allReports = await Report.find({ linkedPost: { $eq: null } }).where('time').gt(incidentTime - HOUR24).lt(incidentTime + HOUR24);
+//   const distance = (loc1, loc2) => Math.sqrt((loc1.lat-loc2.lat)**2 + (loc1.lng-loc2.lng)**2);
+
+//   const correlations = allReports.filter(reportData => distance(reportData.geographicLocation, location) < MAX_DISTANCE);
+//   const officialId = correlations.length == 0 ? null : correlations[0]._id;
+
+//   const post = new Post({
+//     author: userID,
+//     title: title,
+//     content: content,
+//     location: location,
+//     media: media,
+//     endorsements: endorsements,
+//     incidentTime: incidentTime,
+//     reportId: officialId
+//   });
+//   await post.save();
+
+//   // Link the report to the newly generated post
+//   if (correlations.length > 0) {
+//     const report = await Report.findOne({ _id: officialId });
+//     report.linkedPost = post._id;
+//     await report.save();
+//   }
+
+//   res.status(201).json({ 
+//     success: true, 
+//     message: 'Successfully created Post'
+//   }).end(); // 201 chosen over 200 since a resource is successfully created
+// });
+
+// /**
+//  * Delete a post.
+//  * 
+//  * @name DELETE /api/posts/:id?
+//  * 
+//  * @param {string} id - the id number of the post to be deleted
+//  * @return {{success: boolean, message: string}} - information on success and status
+//  * @throws {401} - if a user is not logged in or does not own the post; 
+//  * @throws {404} - if post does not exist
+//  */
+// router.delete('/:id?', [
+//   validateThat.userIsLoggedIn, 
+//   validateThat.userOwnsPost
+// ], async (req, res) => {
+//   await Post.deleteOne({ _id: req.params.id });
+//   res.status(200).json({ 
+//     success: true,
+//     message: `Successfully deleted Post with ID ${req.params.id}` 
+//   }).end();
+// });
+
+// /**
+//  * Add content to a post
+//  * 
+//  * @name PUT /api/posts/:id?
+//  * 
+//  * @param {string} id - the id of the post to update
+//  * @param {string} content - text to append to the existing coontent
+//  * @return {{message: string, post: Post.PostData}} - the updated post
+//  * @throws {401} - if a user is not logged in or does not own the posts
+//  * @throws {404} - if posts does not exist
+//  */
+// router.put('/:id?', [
+//   validateThat.userIsLoggedIn, 
+// ], async (req, res) => {
+//   console.log('Updating: ', req.body);
+//   // Fetches the Post and updates the content
+//   const post = await Post.find({ _id: req.params.id });
+//   // Updates content if new content is given
+//   if (req.body.content)
+//     post[0].content += '\r\n' + req.body.content;
+//   // Updates the list of media if new media is given
+//   if (req.body.media)
+//     post[0].media = post[0].media.concat(req.body.media);
+//   await post[0].save();
+//   res.status(200).json({ 
+//     message: `Successfully updated post`, 
+//     post: post[0]
+//   }).end();
+// });
+
+// /**
+//  * Endorse a post
+//  * 
+//  * @name POST /api/posts/:postId?/endorsement/
+//  * 
+//  * @param {string} postId - the id of the post to endorse
+//  * @param {Officer.UserSubmission[]} endorsements - The list of IDs
+//  * @return {Post} - the endorsed post
+//  * @throws {401} - if a user is not logged in
+//  * @throws {404} - if post does not exist
+//  */
+//  router.post('/:postId?/endorsement', [
+//   validateThat.userIsLoggedIn, 
+//   validateThat.officerSubmissionsWellFormed
+// ], async (req, res) => {
+
+//   // Parse the user that made the request
+//   const username = req.session.username;
+//   const user = await User.findOne({ username: username });
+  
+//   /** @type {Post.PostData} The post we will add endorsments*/
+//   const post = await Post.findOne({ _id: req.params.postId });
+//   /** @type {Map<string, ObjectId[]>} */
+//   const endorsements = post.endorsements;
+  
+//   /** @type {Officer.UserSubmission[]} */
+//   const officerSubmissions = req.body.endorsements;
+
+//   /** @type {Promise<ObjectId>[]} A list of promises that will resolve to an officer's ObjectId, or null */
+//   const officerPromises  = officerSubmissions.map(data => (new Promise(async (resolve, reject) => {
+//     // If the data just has the officerID directly, then return the string casted to ObjectId
+//     if (data.officerID && (await Officer.exists({ _id: data.officerID }))) 
+//       return resolve(mongoose.Types.ObjectId(data.officerID));
+
+//     // If a badge is given and an officer with that badge exists, then we return its ID
+//     if (data.badge && (await Officer.exists({ badge: parseInt(data.badge) })) ) {
+//       return resolve((await Officer.findOne({ badge: parseInt(data.badge) }))._id);
+//     }
+//     // If a name is given and an officer with the name exists, then we return its ID
+//     if (data.name && (await Officer.exists({ name: data.name })) )
+//       return resolve((await Officer.findOne({ name: data.name }))._id);
+    
+//     return resolve(null);
+//   })));
+
+//   /** @type {string[]} The list of officers that this user is endorsing */
+//   const officerIds = (await Promise.all(officerPromises))
+//     .filter(officerID => officerID != null)
+//     .map(objectId => objectId.toString());
+
+//   officerIds.forEach(officerId => {
+//     // Initialize the list of endorsers for this officer if none exists
+//     if (!endorsements.has(officerId))
+//       endorsements.set(officerId, []);
+
+//     const endorsers = endorsements.get(officerId);
+//     // Skip if the user already endorsed this officer
+//     if (endorsers.some  (id => id.equals(user._id))) 
+//       return;
+    
+//     endorsers.push(user._id);
+//   });
+//   post.endorsements = endorsements;
+//   post.markModified('endorsements');
+  
+//   post.save(function(err){
+//     if (err) {
+//       console.log(err);
+//       return;
+//     }
+//     res.status(200).json({
+//       success: true,
+//       message: 'Endorsed',
+//       post: post
+//     }).end(); // 200 chosen over 201 since no resource is created
+//   });
+
+//   console.log(JSON.stringify(post[0]));
+// });
+
+// /**
+//  * Deletes the all of the user's endorsements for the post with the given postID
+//  * 
+//  * @name DELETE /api/posts/:postID?/endorsement
+//  * 
+//  * @param {string} postID - The MongoDB ID for the post
+//  * @returns {{success: boolean, message: string, post: Post.PostData}} Information on the deleted post
+//  * @throws {401} - if the user is not logged in
+//  */
+// router.delete('/:postID?/endorsement', [
+//   validateThat.userIsLoggedIn, 
+// ], async (req, res) => {
+//   /** @type {Post.PostData} */
+//   const post = await Post.findOne({ _id: req.params.postID });
+//   console.log(post);
+
+//   for (const [officerID, endorsers] of post.endorsements.entries()) {
+//     const removed = endorsers.filter(id => id.toString() != req.session.userID)
+//     post.endorsements.set(officerID, removed);
+//   }
+
+//   post.markModified('endorsements');
+//   await post.save();
+//   res.status(200).json({
+//     success: true,
+//     message: 'Endorsements for this post has been removed',
+//     post: post
+//   }).end();
+// });
+
+// module.exports = router;
