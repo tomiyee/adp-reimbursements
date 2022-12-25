@@ -7,18 +7,18 @@
 import { atom } from 'recoil';
 
 export enum View {
-  DASHBOARD,
-  VOUCHER,
+  DASHBOARD = 'dashboard',
+  VOUCHER = 'new-voucher',
 }
 
 export type SidebarState = {
-  selectedItem: View;
+  selectedView: View;
   open: boolean;
 };
 
 const initialState: SidebarState = {
-  selectedItem: View.DASHBOARD,
-  open: false,
+  selectedView: View.DASHBOARD,
+  open: true,
 };
 
 const sidebarAtom = atom({
