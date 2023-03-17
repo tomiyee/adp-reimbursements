@@ -1,13 +1,13 @@
 import MainLayout from '../layout/MainLayout';
 import DashboardView from '../views/Dashboard';
-import VoucherView from '../views/Voucher';
+import NewVoucherView from '../views/Voucher';
 
 const MainRoutes = {
   path: '/',
   element: <MainLayout />,
   children: [
     { path: '/', element: <DashboardView /> },
-    { path: '/new-voucher', element: <VoucherView /> },
+    { path: '/new-voucher', element: <NewVoucherView /> },
   ],
 };
 

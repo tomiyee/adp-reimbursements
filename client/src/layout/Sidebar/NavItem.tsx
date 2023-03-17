@@ -42,7 +42,7 @@ const NavItem: React.FC<NavItemProps> = ({ icon: Icon, view, title }) => {
     setSidebarState({ ...sidebarState, selectedView: view });
   }, [pathname, sidebarState, setSidebarState, view]);
 
-  // Renders the component as a Router Link 
+  // Renders the component as a Router Link
   const routerLink = forwardRef(
     (props, ref: React.ForwardedRef<HTMLAnchorElement>) => (
       <Link ref={ref} {...props} to={getPath(view) ?? ''} target={'_self'} />
